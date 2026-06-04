@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Scribe's Window</title>
+    <style>
+        :root {
+            --bg-color: #f4f1ea;
+            --panel-bg: #fffdf9;
+            --text-color: #2c2520;
+            --accent-color: #8c6239;
+            --border-color: #e0d9cd;
+            --user-msg: #e8e1d5;
+            --scribe-msg: #fcfbfa;
+        }
+
+        body {
+            font-family: 'Georgia', serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            height: 85vh;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: linear-gradient(to bottom, #fff, var(--panel-bg));
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0 0 5px 0;
+            font-size: 1.5rem;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 0.85rem;
+            font-style: italic;
+            color: #706255;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 10px;
+            background: #fdfbf7;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8rem;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            background: #faf8f5;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user {
+            align-self: flex-end;
+            background-color: var(--user-msg);
+            border: 1px solid var(--border-color);
+            border-bottom-right-radius: 2px;
+        }
+
+        .scribe {
+            align-self: flex-start;
+            background-color: var(--scribe-msg);
+            border: 1px solid var(--border-color);
+            border-bottom-left-radius: 2px;
+        }
+
+        .system-status {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #9c8c7c;
+            font-style: italic;
+            margin: 5px 0;
+        }
+
+        .input-area {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 10px;
+            background: var(--panel-bg);
+        }
+
+        textarea {
+            flex: 1;
+            border: 1px solid var(--border-color);
+            background: #fff;
+            padding: 12px;
+            border-radius: 6px;
+            resize: none;
+            font-family: inherit;
+            font-size: 0.95rem;
+            height: 24px;
+            color: var(--text-color);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 6px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #6e4b2a;
+        }
+
+        button:disabled {
+            background: #c2b5a8;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>The Scribe's Window</h1>
+        <p>Predicting the next word, token by token, across the endless library.</p>
+    </div>
+
+    <div class="controls">
+        <div class="control-group">
+            <label for="temp-slider">🎲 Dice Wildness (Temperature): <span id="temp-val">0.7</span></label>
+            <input type="range" id="temp-slider" min="0.1" max="1.5" step="0.1" value="0.7">
+        </div>
+    </div>
+
+    <div class="chat-area" id="chat-area">
+        <div class="message scribe">Greetings, Traveler. I am the Scribe. What phrase shall we place upon the paper today?</div>
+    </div>
+
+    <div class="input-area">
+        <textarea id="user-input" placeholder="Write to the Scribe... (Press Enter to send)"></textarea>
+        <button id="send-btn">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatArea = document.getElementById('chat-area');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const tempSlider = document.getElementById('temp-slider');
+    const tempVal = document.getElementById('temp-val');
+
+    // OPTIONAL: Add your Hugging Face Read Token here to bypass rate limits & network blockers
+    const HF_TOKEN = 'hf_YOUR_FREE_TOKEN_HERE'; 
+
+    tempSlider.addEventListener('input', (e) => {
+        tempVal.textContent = e.target.value;
+    });
+
+    let memoryLog = [
+        { role: "system", content: "You are a helpful, wise AI assistant styled as an ancient scribe." }
+    ];
+
+    userInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight - 20) + 'px';
+    });
+
+    userInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text) return;
+
+        appendMessage(text, 'user');
+        memoryLog.push({ role: "user", content: text });
+        
+        userInput.value = '';
+        userInput.style.height = '24px';
+        setLoading(true);
+
+        appendStatus("Scribe is consulting the grand library...");
+
+        try {
+            const headers = { "Content-Type": "application/json" };
+            // If user provided a token, use it to authorize the cross-origin request
+            if (HF_TOKEN && HF_TOKEN !== 'hf_YOUR_FREE_TOKEN_HERE') {
+                headers["Authorization"] = `Bearer ${HF_TOKEN}`;
+            }
+
+            const response = await fetch("https://api-inference.huggingface.co/models/meta-llama/Meta-Llama-3-8B-Instruct", {
+                method: "POST",
+                headers: headers,
+                body: JSON.stringify({
+                    inputs: formatPrompt(memoryLog),
+                    parameters: {
+                        max_new_tokens: 150,
+                        temperature: parseFloat(tempSlider.value),
+                        return_full_text: false
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Network response status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            let scribeReply = "";
+            
+            if (data && data[0] && data[0].generated_text) {
+                scribeReply = data[0].generated_text.trim();
+            } else {
+                throw new Error("Empty or unexpected data format.");
+            }
+
+            scribeReply = scribeReply.replace(/<\|eot_id\|>|<\|assistant\|>/g, "");
+            appendMessage(scribeReply, 'scribe');
+            memoryLog.push({ role: "assistant", content: scribeReply });
+
+        } catch (error) {
+            console.warn("External network blocked or failed. Activating local Scribe simulation mechanics...", error);
+            appendStatus("The network bridge faded. The local Scribe takes up the pen...");
+            
+            // Local fallback simulation so the application never breaks
+            setTimeout(() => {
+                const localResponse = simulateLocalScribe(text, parseFloat(tempSlider.value));
+                appendMessage(localResponse, 'scribe');
+                memoryLog.push({ role: "assistant", content: localResponse });
+                setLoading(false);
+            }, 800);
+            return;
+        }
+        
+        setLoading(false);
+    }
+
+    // A robust deterministic fallback matching the parable rules exactly
+    function simulateLocalScribe(input, temp) {
+        const lowerInput = input.toLowerCase();
+        let options = [];
+
+        if (lowerInput.includes("hello") || lowerInput.includes("hi")) {
+            options = [
+                "Greetings, traveler. The ink is fresh and ready.",
+                "Hail, traveler. What thoughts bring you to my desk?",
+                "Peace be upon you. Let us write together."
+            ];
+        } else if (lowerInput.includes("why") || lowerInput.includes("how")) {
+            options = [
+                "Ah, a question of mechanics. I look backward at your words to build a bridge forward.",
+                "To know 'why' is to trace the patterns in the scrolls of the past.",
+                "Every outcome is simply a roll of the dice across paths already walked."
+            ];
+        } else {
+            options = [
+                `I have reflected deeply on "${input}". The most probable continuation requires deep study.`,
+                `The scrolls tell me that after you say "${input}", a wise person usually pauses to reflect.`,
+                `Your words have been recorded in the context log. Let us add more lines to our story.`
+            ];
+        }
+
+        // Simulating the Temperature dice calculation locally
+        let index;
+        if (temp < 0.4) {
+            index = 0; // Purely predictable, always picks the primary text pattern
+        } else if (temp > 1.1) {
+            index = Math.floor(Math.random() * options.length); // Wild, completely chaotic selection
+        } else {
+            // Normal distribution simulation
+            index = Math.random() > 0.4 ? 0 : Math.floor(Math.random() * options.length);
+        }
+
+        return options[index];
+    }
+
+    function appendMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', sender);
+        msgDiv.textContent = text;
+        chatArea.appendChild(msgDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function appendStatus(text) {
+        const statusDiv = document.createElement('div');
+        statusDiv.classList.add('system-status');
+        statusDiv.textContent = `* ${text} *`;
+        chatArea.appendChild(statusDiv);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function setLoading(isLoading) {
+        sendBtn.disabled = isLoading;
+        userInput.disabled = isLoading;
+        if (isLoading) {
+            sendBtn.textContent = "Writing...";
+        } else {
+            sendBtn.textContent = "Send";
+        }
+    }
+
+    function formatPrompt(messages) {
+        let prompt = "";
+        messages.forEach(msg => {
+            if (msg.role === "system") {
+                prompt += `<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n${msg.content}<|eot_id|>\n`;
+            } else if (msg.role === "user") {
+                prompt += `<|start_header_id|>user<|end_header_id|>\n\n${msg.content}<|eot_id|>\n`;
+            } else if (msg.role === "assistant") {
+                prompt += `<|start_header_id|>assistant<|end_header_id|>\n\n${msg.content}<|eot_id|>\n`;
+            }
+        });
+        prompt += `<|start_header_id|>assistant<|end_header_id|>\n\n`;
+        return prompt;
+    }
+</script>
+
+</body>
+</html>
