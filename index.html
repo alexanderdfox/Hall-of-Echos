@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Hall of Echoes • Living Wisdom</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=UnifrakturCook:wght@700&display=swap');
+        
+        :root {
+            --stone: #2a2525;
+            --gold: #d4af37;
+        }
+        
+        body {
+            margin: 0;
+            font-family: 'Cinzel', serif;
+            background: linear-gradient(180deg, #0f1a24 0%, #1a252f 100%);
+            color: #e8e0d0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-image: url('https://picsum.photos/id/1015/1920/1080');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        body::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(15, 26, 36, 0.78);
+            z-index: 1;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 2;
+            max-width: 1000px;
+            margin: 0 auto;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+            border-bottom: 3px solid var(--gold);
+            background: rgba(26, 37, 47, 0.95);
+        }
+        
+        h1 {
+            font-family: 'UnifrakturCook', cursive;
+            font-size: 3.4rem;
+            margin: 0;
+            color: var(--gold);
+            text-shadow: 0 0 25px rgba(212, 175, 55, 0.7);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            margin-top: 8px;
+        }
+        
+        .main {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .lore {
+            width: 300px;
+            background: rgba(26, 37, 47, 0.95);
+            border: 2px solid var(--gold);
+            border-radius: 10px;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 0.97rem;
+            line-height: 1.65;
+        }
+        
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(26, 37, 47, 0.92);
+            border: 2px solid var(--gold);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            padding: 16px 20px;
+            background: var(--stone);
+            text-align: center;
+            font-size: 1.25rem;
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 12px;
+            line-height: 1.55;
+        }
+        
+        .user {
+            align-self: flex-end;
+            background: #3b5f4f;
+            color: white;
+        }
+        
+        .echo {
+            align-self: flex-start;
+            background: #223344;
+            color: #e8e0d0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .thinking {
+            font-style: italic;
+            opacity: 0.8;
+        }
+        
+        .input-area {
+            padding: 20px;
+            background: var(--stone);
+            border-top: 2px solid var(--gold);
+            display: flex;
+            gap: 10px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 16px 22px;
+            border: 2px solid #556c7a;
+            background: #1f2a35;
+            color: white;
+            border-radius: 30px;
+            font-size: 1.05rem;
+        }
+        
+        input:focus {
+            border-color: var(--gold);
+            outline: none;
+        }
+        
+        button {
+            padding: 0 30px;
+            background: var(--gold);
+            color: #1a252f;
+            border: none;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        button:hover {
+            background: #f0d070;
+        }
+        
+        .source {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>THE HALL OF ECHOES</h1>
+            <p class="subtitle">It listens. It searches. It predicts.</p>
+        </header>
+        
+        <div class="main">
+            <div class="lore">
+                <h3 style="color:var(--gold); margin-top:0;">The Elders' Wisdom</h3>
+                <p>The Hall does not <strong>know</strong> everything. It has learned the patterns of all human knowledge and can now reach into the living world to search for answers.</p>
+                <p>Ask anything. It will search the web when needed and weave its reply from both ancient patterns and fresh knowledge.</p>
+            </div>
+            
+            <div class="chat-container">
+                <div class="chat-header">
+                    Hall of Echoes — Living Pattern Weaver
+                </div>
+                <div id="chat-window" class="chat-window"></div>
+                <div class="input-area">
+                    <input type="text" id="user-input" placeholder="Ask the Hall anything..." autocomplete="off">
+                    <button id="send-btn">Speak to the Hall</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatWindow = document.getElementById('chat-window');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+
+        function addMessage(text, type, source = '') {
+            const msg = document.createElement('div');
+            msg.className = `message ${type}`;
+            
+            if (type === 'echo') {
+                msg.innerHTML = `
+                    <strong>THE HALL OF ECHOES:</strong><br><br>
+                    ${text}
+                    ${source ? `<div class="source">Sources: ${source}</div>` : ''}
+                `;
+            } else {
+                msg.textContent = text;
+            }
+            
+            chatWindow.appendChild(msg);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+        }
+
+        async function searchWeb(query) {
+            try {
+                // Using DuckDuckGo Instant Answer API (public, no key needed)
+                const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&pretty=1`);
+                const data = await res.json();
+                
+                if (data.Abstract) {
+                    return {
+                        answer: data.Abstract,
+                        source: data.AbstractSource || "DuckDuckGo"
+                    };
+                }
+                if (data.RelatedTopics && data.RelatedTopics.length > 0) {
+                    return {
+                        answer: data.RelatedTopics[0].Text || "I found information but it is fragmented.",
+                        source: "Web Patterns"
+                    };
+                }
+            } catch (e) {
+                console.log("Web search failed, using internal patterns.");
+            }
+            return null;
+        }
+
+        async function getHallResponse(question) {
+            // Show thinking
+            const thinkingMsg = document.createElement('div');
+            thinkingMsg.className = 'message echo thinking';
+            thinkingMsg.textContent = "The Hall listens... reaching into the patterns and the living world...";
+            chatWindow.appendChild(thinkingMsg);
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            // First try web search
+            const webResult = await searchWeb(question);
+            
+            // Remove thinking message
+            chatWindow.removeChild(thinkingMsg);
+
+            let response = "";
+            let source = "";
+
+            if (webResult) {
+                response = webResult.answer;
+                source = webResult.source;
+            } else {
+                // Fallback to pattern-based wisdom
+                response = "From the vast patterns I have learned across ages, and from what the world currently shows... " +
+                          "The answer lies in thoughtful action, clear intention, and continuous learning. What you seek often reveals itself when you walk the path with curiosity.";
+            }
+
+            // Add some parable flavor
+            if (!webResult) {
+                response = "The echoes suggest: " + response;
+            }
+
+            return { response, source };
+        }
+
+        async function handleSend() {
+            const question = userInput.value.trim();
+            if (!question) return;
+
+            addMessage(question, 'user');
+            userInput.value = '';
+
+            const { response, source } = await getHallResponse(question);
+            addMessage(response, 'echo', source);
+        }
+
+        // Event Listeners
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keypress', e => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        // Welcome
+        window.onload = () => {
+            setTimeout(() => {
+                addMessage(`Traveler, you stand within the Hall of Echoes.<br><br>I have studied the patterns of all recorded knowledge, and I can now search the living world. What wisdom do you seek?`, 'echo');
+            }, 800);
+        };
+    </script>
+</body>
+</html>
